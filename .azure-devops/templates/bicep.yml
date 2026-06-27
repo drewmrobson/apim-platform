@@ -1,0 +1,69 @@
+##
+# Deploy a bicep file to target subscription
+##
+parameters:
+  azureSubscription:
+    description: "Azure Service Connection for this workload"
+    type: string
+    required: true
+  subscriptionId:
+    description: "Target subscription ID for this workload"
+    type: string
+    required: true
+  location:
+    description: Azure region for this workload e.g. australiaeast
+    type: string
+    required: true
+  environment:
+    description: "SDLC environment for this workload"
+    type: string
+    required: true
+  templateFile:
+    description: Bicep file to execute
+    type: string
+    required: true
+  parametersFile:
+    description: Bicepparam file to use
+    type: string
+    required: true
+  name:
+    description: Stage name
+    type: string
+    required: true
+
+stages:
+  - stage: ${{ parameters.name }}
+    displayName: "${{ parameters.environment }} | Bicep"
+    jobs:
+      - deployment: bicep
+        timeoutInMinutes: 20
+        displayName: "${{ parameters.environment }} | Bicep"
+        environment: "${{ parameters.environment }}"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: "${{ parameters.environment }} | Bicep What If"
+                  inputs:
+                    azureSubscription: "${{ parameters.azureSubscription }}"
+                    scriptLocation: "inlineScript"
+                    scriptType: "bash"
+                    inlineScript: |
+                      az account set -s ${{ parameters.subscriptionId }}
+                      az --version
+                      az group create -n ${{ parameters.resourceGroupName }} -l ${{ parameters.location }}
+                      az bicep lint --file ${{ parameters.templateFile }}
+                      az bicep build --file ${{ parameters.templateFile }} --outdir .
+                      az deployment group validate -rg ${{ parameters.resourceGroupName }} --template-file ${{ parameters.templateFile }} --parameters ${{ parameters.parametersFile }}
+                      az deployment group create -rg ${{ parameters.resourceGroupName }} --template-file ${{ parameters.templateFile }} --parameters ${{ parameters.parametersFile }} --what-if
+                - task: AzureCLI@2
+                  displayName: "${{ parameters.environment }} | Bicep Deploy"
+                  inputs:
+                    azureSubscription: "${{ parameters.azureSubscription }}"
+                    scriptLocation: "inlineScript"
+                    scriptType: "bash"
+                    inlineScript: |
+                      az account set -s ${{ parameters.subscriptionId }}
+                      az deployment group create -rg ${{ parameters.resourceGroupName }} --template-file ${{ parameters.templateFile }} --parameters ${{ parameters.parametersFile }} --debug

@@ -1,0 +1,57 @@
+##
+# Deploy the base Integration Platform to Azure
+##
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  # Baseline constants
+  - name: location
+    value: australiaeast
+  - name: system.debug
+    value: "true"
+
+  # Semver versioning
+  - name: major
+    value: "1"
+  - name: minor
+    value: "0"
+  - name: revision
+    value: $[counter('', 1)]
+
+# Semver versioning with auto increment revision
+name: $(major).$(minor)$(Rev:.r)
+
+stages:
+  # DEV
+  - template: templates/bicep.yml
+    parameters:
+      azureSubscription:
+      subscriptionId:
+      environment: dev
+      location: australiaeast
+      templateFile: ./bicep/main.bicep
+      parametersFile: ./bicep/parameters/dev.bicepparam
+      name: bicepdev
+  # TST
+  - template: templates/bicep.yml
+    parameters:
+      azureSubscription:
+      subscriptionId:
+      environment: tst
+      location: australiaeast
+      templateFile: ./bicep/main.bicep
+      parametersFile: ./bicep/parameters/tst.bicepparam
+      name: biceptst
+  # PRD
+  - template: templates/bicep.yml
+    parameters:
+      azureSubscription:
+      subscriptionId:
+      environment: prd
+      location: australiaeast
+      templateFile: ./bicep/main.bicep
+      parametersFile: ./bicep/parameters/prd.bicepparam
+      name: bicepprd

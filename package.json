@@ -1,0 +1,26 @@
+{
+  "name": "apim-platform",
+  "version": "0.0.1",
+  "description": "Create an Azure API Management instance with minimal setup",
+  "keywords": [
+    "azure",
+    "apim",
+    "bicep",
+    "bicepparam"
+  ],
+  "homepage": "https://github.com/drewmrobson/apim-platform#readme",
+  "bugs": {
+    "url": "https://github.com/drewmrobson/apim-platform/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drewmrobson/apim-platform.git"
+  },
+  "license": "MIT",
+  "author": "drew",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  }
+}
